@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chess</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/chessboard-1.0.0.css')}}">
+
+</head>
+
+<body>
+    <div id="myBoard" style="width: 700px"></div>
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="{{url_for('static',filename='js/chessboard-1.0.0.js')}}"></script>
+    <script src="{{url_for('static',filename='js/chess_ui_handler.js')}}"></script>
+</body>
+
+</html>
