@@ -1,8 +1,5 @@
-#initialize a chessboard and make a function to make a random move
-# Path: ChessEngine\chess.py
 from random import choice
 import chess
-
 class ChessEngine:
     def __init__(self):
         self.board = chess.Board()
@@ -17,6 +14,17 @@ class ChessEngine:
 
     def get_valid_moves(self):
         return [str(move) for move in self.board.legal_moves]
+
+    def move_generator(self, depth):
+        if(depth == 0):
+            return 1
+        moves = self.get_valid_moves()
+        numPositions = 0
+        for move in moves:
+            self.board.push(chess.Move.from_uci(move))
+            numPositions += self.move_generator(depth - 1)  
+            self.board.pop()
+        return numPositions
 
     def make_random_move(self):
         if self.game_over:
@@ -77,6 +85,3 @@ class ChessEngine:
     
     def get_game_over(self):
         return self.game_over
-    
-
-
