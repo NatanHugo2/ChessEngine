@@ -11,8 +11,6 @@ def index():
     return render_template('chess.html')
 
 chess = chessEngine.ChessEngine()
-teste = chess.move_generator(2)
-print(teste)
 @socketio.on('connect')
 def handle_connect():
     emit('game_state', chess.get_game_state())
@@ -23,7 +21,8 @@ def handle_movement(data):
     chess.make_move(move)
     chess.update_game()
     if(chess.turn == 'b'):
-        chess.make_random_move()
+        move = chess.get_best_move(3)
+        chess.make_move(move)
         chess.update_game()
     emit('game_state', chess.get_game_state(), broadcast=True)
 

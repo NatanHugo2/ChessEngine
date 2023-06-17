@@ -9,13 +9,13 @@ function onDrop (source, target, piece, newPos, oldPos, orientation) {
         oldPos: Chessboard.objToFen(oldPos),
         orientation: orientation
     });
+    board.draggable = false;
 }
 
 var config = {
     draggable: true,
     position: 'start',
     onDrop: onDrop,
-    sparePieces: true,
     pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png',
 }
 
@@ -23,5 +23,6 @@ var board = Chessboard('myBoard', config)
 
 socket.on('game_state', function(msg) {
     board.position(msg);
+    board.draggable = true;
 });
 
