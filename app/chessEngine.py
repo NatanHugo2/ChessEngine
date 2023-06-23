@@ -66,22 +66,148 @@ class ChessEngine:
             ]
         }
         self.pst_b = {piece: [row[::-1] for row in self.pst[piece]] for piece in self.pst}
-                
         self.board = chess.Board()
-        self.valid_moves = self.get_valid_moves()
-        self.move = None
-        self.move_made = False
         self.game_over = False
         self.turn = 'w'
         self.winner = None
-        self.move_stack = []
-        self.move_stack.append(self.board.fen())
 
-    def get_valid_moves(self):
-        return [str(move) for move in self.board.legal_moves]
+    def minimax(self, depth, alpha, beta, isMaximizingPlayer, board=None):
+        if(board is None):
+            board = self.board.copy()
 
-    def get_ordered_moves(self):
-        moves = self.get_valid_moves()
+        if(depth == 0):
+            return self.evaluate(board)
+
+        if(isMaximizingPlayer):
+            maxEval = -99999
+            moves = self.get_ordered_moves(board)
+            for move in moves:
+                board.push(chess.Move.from_uci(move))
+                value = self.minimax(depth - 1, alpha, beta, False, board)
+                board.pop()
+                maxEval = max(maxEval,value)
+                alpha = max(alpha,value)
+                if beta <= alpha:
+                    return maxEval
+            return maxEval
+        
+        else:
+            minEval = 99999
+            moves = self.get_ordered_moves(board)
+            for move in moves:
+                board.push(chess.Move.from_uci(move))
+                value = self.minimax(depth - 1, alpha, beta, True, board)
+                board.pop()
+                minEval = min(minEval,value)
+                beta = min(beta,value)
+                if beta <= alpha:
+                    return minEval
+            return minEval
+
+    def evaluate(self, board):
+        white_material = self.count_material(chess.WHITE,board)
+        black_material = self.count_material(chess.BLACK,board)
+        pst_evaluation = self.calculate_pst_evaluation(chess.WHITE, board) - self.calculate_pst_evaluation(chess.BLACK, board)
+        evaluation = white_material - black_material + pst_evaluation
+        perspective = 1 if self.turn == 'w' else -1
+        return perspective * evaluation
+    
+    def count_material(self, color, board):
+        material = 0
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece is not None:
+                if piece.color == color:
+                    material += self.piece_values[piece.symbol().upper()]
+                else:
+                    material -= self.piece_values[piece.symbol().upper()]
+        return material
+    
+    def calculate_pst_evaluation(self, color, board):
+        pst_evaluation = 0
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece is not None:
+                if piece.color == color:
+                    rank = chess.square_rank(square)
+                    file = chess.square_file(square)
+                    pst_evaluation += self.pst[piece.symbol().upper()][rank][file]
+                else:
+                    rank = chess.square_rank(square)
+                    file = chess.square_file(square)
+                    pst_evaluation -= self.pst_b[piece.symbol().upper()][rank][file]
+        return pst_evaluation
+
+    def make_random_move(self):
+        if self.game_over:
+            return
+        self.move = choice(self.valid_moves)
+
+    def make_move(self, move):
+        try:
+            if self.game_over:
+                return False
+            
+            if (move == None):
+                return False
+
+            if (move + 'q') in self.get_valid_moves(self.board):
+                move = move + 'q'
+
+            if move not in self.get_valid_moves(self.board):
+                print('[!] Invalid move - ' + move)
+                return False
+            
+            self.board.push(chess.Move.from_uci(move))
+
+            if self.board.is_game_over():
+                self.game_over = True
+                if self.board.is_checkmate():
+                    self.winner = 'w' if self.turn == 'b' else 'b'
+                else:
+                    self.winner = 'draw'
+            self.turn = 'w' if self.turn == 'b' else 'b'
+            return self.get_game_state()
+        
+        except Exception as e:
+            self.board.pop()
+            print('[!] Error making move - ' + move)
+            print('[!] BEGIN ERROR MESSAGE')
+            print(e)
+            print('[!] END ERROR MESSAGE')
+
+        
+    def get_best_move(self,depth):
+        try:
+            board = chess.Board(self.get_game_state())
+            board.turn = True if self.turn == 'w' else False
+            bestMove = None
+            bestValue = -99999
+            alpha = -99999
+            beta = 99999
+            moves = self.get_ordered_moves(board)
+            for move in moves:
+                board.push(chess.Move.from_uci(move))
+                value = self.minimax(depth-1,alpha,beta,False,board)
+                board.pop()
+                if value > bestValue:
+                    bestValue = value
+                    bestMove = move
+            return bestMove
+        except Exception as e:
+            print('[!] Error getting best move')
+            print('[!] BEGIN ERROR MESSAGE')
+            print(e)
+            print('[!] END ERROR MESSAGE')
+
+    def get_game_state(self):
+        return self.board.fen()
+    
+    def get_valid_moves(self, board):
+        return [str(move) for move in board.legal_moves]
+
+    def get_ordered_moves(self,board):
+        moves = self.get_valid_moves(board)
         ordered_moves = sorted(
             moves,
             key=lambda move: (
@@ -104,143 +230,3 @@ class ChessEngine:
         if attacker_piece is None:
             return 0
         return -attacker_piece.piece_type
-
-
-    def minimax(self, depth, alpha, beta, isMaximizingPlayer):
-        if(depth == 0):
-            return self.evaluate()
-        
-        if(isMaximizingPlayer):
-            maxEval = -99999
-            moves = self.get_ordered_moves()
-            for move in moves:
-                self.board.push(chess.Move.from_uci(move))
-                value = self.minimax(depth - 1,alpha,beta,False)
-                self.board.pop()
-                maxEval = max(maxEval,value)
-                alpha = max(alpha,value)
-                if beta <= alpha:
-                    return maxEval
-            return maxEval
-        
-        else:
-            minEval = 99999
-            moves = self.get_ordered_moves()
-            for move in moves:
-                self.board.push(chess.Move.from_uci(move))
-                value = self.minimax(depth - 1,alpha,beta,True)
-                self.board.pop()
-                minEval = min(minEval,value)
-                beta = min(beta,value)
-                if beta <= alpha:
-                    return minEval
-            return minEval
-
-    def get_best_move(self,depth):
-        bestMove = None
-        bestValue = -99999
-        alpha = -99999
-        beta = 99999
-        moves = self.get_valid_moves()
-        for move in moves:
-            self.board.push(chess.Move.from_uci(move))
-            value = self.minimax(depth - 1,alpha,beta,False)
-            self.board.pop()
-            if value > bestValue:
-                bestValue = value
-                bestMove = move
-        return bestMove
-
-    def evaluate(self):
-        white_material = self.count_material(chess.WHITE)
-        black_material = self.count_material(chess.BLACK)
-        pst_evaluation = self.calculate_pst_evaluation(chess.WHITE) - self.calculate_pst_evaluation(chess.BLACK)
-        evaluation = white_material - black_material + pst_evaluation
-        perspective = 1 if self.turn == 'w' else -1
-        return perspective * evaluation
-    
-    def count_material(self, color):
-        material = 0
-        for square in chess.SQUARES:
-            piece = self.board.piece_at(square)
-            if piece is not None:
-                if piece.color == color:
-                    material += self.piece_values[piece.symbol().upper()]
-                else:
-                    material -= self.piece_values[piece.symbol().upper()]
-        return material
-    
-    def calculate_pst_evaluation(self, color):
-        pst_evaluation = 0
-        for square in chess.SQUARES:
-            piece = self.board.piece_at(square)
-            if piece is not None:
-                if piece.color == color:
-                    rank = chess.square_rank(square)
-                    file = chess.square_file(square)
-                    pst_evaluation += self.pst[piece.symbol().upper()][rank][file]
-                else:
-                    rank = chess.square_rank(square)
-                    file = chess.square_file(square)
-                    pst_evaluation -= self.pst_b[piece.symbol().upper()][rank][file]
-        return pst_evaluation
-
-    def make_random_move(self):
-        if self.game_over:
-            return
-        self.move = choice(self.valid_moves)
-
-    def make_move(self, move):
-        if self.game_over:
-            return
-        self.move = move
-
-    def update_game(self):
-        if self.move is None:
-            return
-        if self.move not in self.valid_moves:
-            return
-        self.board.push(chess.Move.from_uci(self.move))
-        self.move_stack.append(self.board.fen())
-        self.valid_moves = self.get_valid_moves()
-        self.move_made = True
-        self.move = None
-
-        if self.board.is_game_over():
-            self.game_over = True
-            if self.board.is_checkmate():
-                self.winner = 'w' if self.turn == 'b' else 'b'
-            else:
-                self.winner = 'draw'
-
-        self.turn = 'w' if self.turn == 'b' else 'b'
-
-    def get_game_state(self):
-        return self.board.fen()
-
-    def get_move_made(self):
-        return self.move_made
-
-    def get_game_over(self):
-        return self.game_over
-
-    def get_winner(self):
-        return self.winner
-
-    def get_turn(self):
-        return self.turn
-
-    def get_move_stack(self):
-        return self.move_stack
-    
-    def get_board(self):
-        return self.board
-    
-    def get_move(self):
-        return self.move
-    
-    def get_move_made(self):
-        return self.move_made
-    
-    def get_game_over(self):
-        return self.game_over

@@ -18,13 +18,13 @@ def handle_connect():
 @socketio.on('move')
 def handle_movement(data):
     move = data['source'] + data['target']
-    chess.make_move(move)
-    chess.update_game()
-    if(chess.turn == 'b'):
-        move = chess.get_best_move(3)
-        chess.make_move(move)
-        chess.update_game()
-    emit('game_state', chess.get_game_state(), broadcast=True)
+    result = chess.make_move(move)
+    if(result == False):
+        emit('game_state', chess.get_game_state())
+        return
+    best_move = chess.get_best_move(3)
+    result = chess.make_move(best_move)
+    emit('game_state', result)
 
 if __name__ == '__main__':
     socketio.run(app)

@@ -7,7 +7,8 @@ function onDrop (source, target, piece, newPos, oldPos, orientation) {
         piece: piece,
         newPos: Chessboard.objToFen(newPos),
         oldPos: Chessboard.objToFen(oldPos),
-        orientation: orientation
+        orientation: orientation,
+        
     });
     board.draggable = false;
 }
@@ -16,7 +17,7 @@ var config = {
     draggable: true,
     position: 'start',
     onDrop: onDrop,
-    pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png',
+    pieceTheme: '/static/img/chesspieces/default/{piece}.png',
 }
 
 var board = Chessboard('myBoard', config)
