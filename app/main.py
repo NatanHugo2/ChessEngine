@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit, send
 
 import chessEngine
 
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -14,6 +15,10 @@ chess = chessEngine.ChessEngine()
 @socketio.on('connect')
 def handle_connect():
     emit('game_state', chess.get_game_state())
+
+@socketio.on('foda')
+def lidar_com_foda(msg):
+    print(msg)
 
 @socketio.on('move')
 def handle_movement(data):

@@ -12,12 +12,13 @@ function onDrop (source, target, piece, newPos, oldPos, orientation) {
     });
     board.draggable = false;
 }
-
+function getLocalStream(){}
+socket.emit("foda",{naosei})
 var config = {
     draggable: true,
     position: 'start',
     onDrop: onDrop,
-    pieceTheme: '/static/img/chesspieces/default/{piece}.png',
+    pieceTheme: '/static/img/chesspieces/custom/{piece}.png',
 }
 
 var board = Chessboard('myBoard', config)
