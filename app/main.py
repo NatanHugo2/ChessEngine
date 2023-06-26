@@ -10,6 +10,10 @@ socketio = SocketIO(app)
 def index():
     return render_template('chess.html')
 
+@app.route('/jogar')
+def jogo():
+    return render_template('jogo.html')
+
 chess = chessEngine.ChessEngine()
 @socketio.on('connect')
 def handle_connect():
@@ -25,6 +29,5 @@ def handle_movement(data):
         chess.make_move(move)
         chess.update_game()
     emit('game_state', chess.get_game_state(), broadcast=True)
-
 if __name__ == '__main__':
     socketio.run(app)

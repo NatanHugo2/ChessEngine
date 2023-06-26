@@ -1,0 +1,22 @@
+
+body{
+    max-width: 1500px;
+    margin: 0 auto;
+    background-image: url('/app/static/img/fundo3.jpg');
+    background-color: rgb(14, 14, 14);
+    background-size: cover;
+    font-family: 'Karla';
+    color: beige;
+}
+
+body.tabuleiro main{
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0 auto;
+    padding-bottom: 235px;
+    
+}
+
